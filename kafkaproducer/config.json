@@ -1,0 +1,5 @@
+{
+  "broker_list": ["c6401.ambari.apache.org",
+    "c6402.ambari.apache.org"
+  ]
+}
