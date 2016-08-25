@@ -13,12 +13,16 @@ var(
 
 func init(){
 	viperInstance = viper.New()
-	viperInstance.AddConfigPath("/Users/tylerlisowski/Documents/gopath/src/github.com/relyt0925/company_news_reader/kafkaproducer/config.json")
-	viperInstance.SetConfigName("config.json")
+	//add search path for the config file name
+	viperInstance.AddConfigPath("/Users/tylerlisowski/Documents/gopath/src/github.com/relyt0925/company_news_reader/kafkaproducer/")
+	viperInstance.SetConfigName("config")
 	viperInstance.SetConfigType("json")
 	viperInstance.ReadInConfig()
 }
 
+//NewProducer creates a new Async Kafka Producer based on the given configuration with
+//connections to the ips/domains and port combinations specified in brokerList. Entry
+//in broker list is <domain OR ip>:<port>
 func NewProducer(brokerList []string, config *sarama.Config ) sarama.AsyncProducer {
 
 	producer, err := sarama.NewAsyncProducer(brokerList, config)
@@ -50,11 +54,11 @@ func getDefaultConfig() *sarama.Config{
 	return config
 }
 
+//NewDefaultProducer creates a Async Kafka Producer with default parameters
 func NewDefaultProducer() sarama.AsyncProducer{
 	//read from environment variable to get broker list
 	brokerList := viperInstance.GetStringSlice("broker_list")
 	config := getDefaultConfig()
-	brokerList = []string{"c6401.ambari.apache.org:6667","c6402.ambari.apache.org:6667"}
 	return NewProducer(brokerList,config)
 }
 

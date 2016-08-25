@@ -1,5 +1,5 @@
 {
-  "broker_list": ["c6401.ambari.apache.org",
-    "c6402.ambari.apache.org"
+  "broker_list": ["c6401.ambari.apache.org:6667",
+    "c6402.ambari.apache.org:6667"
   ]
 }

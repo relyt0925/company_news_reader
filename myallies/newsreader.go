@@ -10,7 +10,7 @@ import (
 const prefix = "http://myallies.com/api"
 
 
-
+//NewsItem used to handle data received from the /news/{company} route
 type NewsItems []struct {
 	NewsID int `json:"NewsID"`
 	Company struct {
@@ -40,19 +40,20 @@ type NewsItems []struct {
 	CommentsCount int `json:"CommentsCount"`
 }
 
-
+//Length outputs the length of the encoded object
 func (newsItems *NewsItems) Length() int {
 	bytes, _ := json.Marshal(newsItems)
 	return len(bytes)
 }
 
+//Encode turns the structure into a byte array
 func (newsItems *NewsItems) Encode() ([]byte, error) {
 	bytes, _ := json.Marshal(newsItems)
 	return bytes, nil
 }
 
 
-
+//StockQuote represents the return value from the /quote/{company} route
 type StockQuote struct {
 	StockID int `json:"StockID"`
 	LastTradePriceOnly string `json:"LastTradePriceOnly"`
@@ -60,15 +61,18 @@ type StockQuote struct {
 	CompanyName string `json:"CompanyName"`
 }
 
+//Length outputs the length of the encoded object
 func (sq *StockQuote) Length() int {
 	bytes, _ := json.Marshal(sq)
 	return len(bytes)
 }
 
+//Encode turns the structure into a byte array
 func (sq *StockQuote) Encode() ([]byte, error) {
 	bytes, _ := json.Marshal(sq)
 	return bytes, nil
 }
+
 
 type NewsItemContent struct {
 	ID int `json:"ID"`
@@ -79,9 +83,12 @@ type NewsItemContent struct {
 
 
 
+//httpClient used to talk to rest apis
 var httpClient = &http.Client{Timeout:time.Second*10, }
 
-
+//FetchCompanyNews fetches recent news articles for the company
+//from the proper rest api endpoint. Company should be specified
+//as the Ticker symbol (ie. Microsoft=MSFT)
 func FetchCompanyNews(companyName string) ( *NewsItems, error){
 	endpoint := fmt.Sprintf("%s/news/%s",prefix,companyName)
 	response, err := httpClient.Get(endpoint)
@@ -96,6 +103,9 @@ func FetchCompanyNews(companyName string) ( *NewsItems, error){
 	return newsItems, nil
 }
 
+//FetchStockQuote fetches the most recent stock info for the
+//company passed into the function. Company should be specified
+//as the Ticker symbol (ie. Microsoft=MSFT)
 func FetchStockQuote(companyName string) ( *StockQuote, error){
 	endpoint := fmt.Sprintf("%s/quote/%s",prefix,companyName)
 	response, err := httpClient.Get(endpoint)
@@ -110,7 +120,10 @@ func FetchStockQuote(companyName string) ( *StockQuote, error){
 	return newsItems, nil
 }
 
-
+//FetchNewsItemContent fetches the actual news article content for the
+//specific newsid (retrieved with the FetchCompanyNews method). NewsID
+//corresponds to the newsID returned from the FetchCompanyNews method
+//for a specific article.
 func FetchNewsItemContent (newsID int) (*NewsItemContent, error){
 	endpoint := fmt.Sprintf("%s/newsitem/%d",prefix,newsID)
 	fmt.Println(endpoint)
