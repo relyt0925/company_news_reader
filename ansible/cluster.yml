@@ -1,0 +1,216 @@
+---
+- hosts: ambari_server
+  tasks:
+    - name: Update modules and cache
+      yum: name=* state=latest update_cache=yes
+
+    - name: Get ambari repo
+      get_url: url=http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/2.2.2.0/ambari.repo dest=/etc/yum.repos.d/ambari.repo
+
+    - name: Install ambari
+      yum: name=ambari-server state=latest
+
+    - name: sliently setup ambari server
+      command: ambari-server setup -s
+
+    - name: Turn on ntp daemon
+      service: name=ntpd state=started enabled=yes
+
+    #- name: Turn off iptables
+    #  service: name=iptables state=stopped
+
+    - name: Start ambari server
+      command: ambari-server restart
+
+
+- hosts: docker
+  tasks:
+    - name: Update modules and cache
+      yum: name=* state=latest update_cache=yes
+
+    - name: Add docker to repo
+      yum_repository:
+        name: dockerrepo
+        description: Docker repository
+        baseurl: https://yum.dockerproject.org/repo/main/centos/7/
+        enabled: 1
+        gpgcheck: 1
+        gpgkey: https://yum.dockerproject.org/gpg
+
+    - name: Install docker
+      yum: name=docker-engine state=latest
+
+
+    - name: Enable docker at bootup
+      service: name=docker enabled=yes
+      ignore_errors: yes
+
+    - name: Start docker service
+      service: name=docker state=started
+      ignore_errors: yes
+
+    - name: Change docker.service file
+      lineinfile: dest=/etc/systemd/system/multi-user.target.wants/docker.service regexp='^ExecStart' line='ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock'
+
+    - name: reload the daemon
+      command: systemctl daemon-reload
+
+    - name: Restart docker
+      command: systemctl restart docker
+
+    - name: Pull down all docker containers
+      command: docker pull {{ item }}
+      with_items:
+        - swarm
+        - progrium/consul
+        - gliderlabs/registrator
+        - rethinkdb
+        - shipyard/shipyard
+
+
+    - name: Remove all running docker containers
+      command: >-
+              docker rm
+              cclient
+              consul
+              smanager
+              registrar
+              sagent
+      ignore_errors: yes
+
+  handlers:
+    - name: reload systemd
+      command: systemctl daemon-reload
+
+
+- hosts: consul_master
+  tasks:
+    - name: Update modules and cache
+      yum: name=* state=latest update_cache=yes
+
+    - name: Ensure delttion of consul directory (master node)
+      file: path=/consul state=absent
+
+    - name: Create consul directory (master node)
+      file: path=/consul state=directory
+
+
+    - name: Run consul manager container (master node)
+      command: >-
+              docker run
+              -d
+              --name consul
+              -h consul
+              -v /consul:/data
+              -p {{ ansible_host }}:8300:8300
+              -p {{ ansible_host }}:8301:8301
+              -p {{ ansible_host }}:8301:8301/udp
+              -p {{ ansible_host }}:8302:8302
+              -p {{ ansible_host }}:8302:8302/udp
+              -p {{ ansible_host }}:8400:8400
+              -p {{ ansible_host }}:8500:8500
+              -p {{ ansible_host }}:53:53/udp
+              progrium/consul
+              -server
+              -advertise {{ ansible_host }}
+              -client 0.0.0.0
+              -bootstrap-expect 1
+              -ui-dir /ui
+
+    - name: Run service registration container for consul (every node)
+      command: >-
+              docker run
+              -d
+              --name registrar
+              -h registrar
+              -v /var/run/docker.sock:/tmp/docker.sock
+              gliderlabs/registrator
+              consul://{{ hostvars[groups['consul_master'][0]]['ansible_host'] }}:8500
+
+    - name: Run swarm agent on each node
+      command: >-
+              docker run
+              -d
+              --name sagent
+              -h sagent
+              swarm join
+              --addr={{ ansible_host }}:2375
+              consul://{{ ansible_host }}:8500
+
+    - name: Run swarm manager on the node as well
+      command: >-
+            docker run
+            -d
+            --name smanager
+            -h smanager
+            -p 2400:2375
+            swarm manage
+            consul://{{ ansible_host }}:8500
+
+- hosts: consul_slaves
+  tasks:
+    - name: Ensure deltion of consul directory (master node)
+      file: path=/consul state=absent
+
+    - name: Run consul service discovery agent (everynode)
+      command: >-
+              docker run
+              -d
+              --name cclient
+              -h cclient.{{inventory_hostname}}
+              -p {{ ansible_host }}:8300:8300
+              -p {{ ansible_host }}:8301:8301
+              -p {{ ansible_host }}:8301:8301/udp
+              -p {{ ansible_host }}:8302:8302
+              -p {{ ansible_host }}:8302:8302/udp
+              -p {{ ansible_host }}:8400:8400
+              -p {{ ansible_host }}:8500:8500
+              -p {{ ansible_host }}:53:53/udp
+              progrium/consul
+              -rejoin
+              -advertise {{ ansible_host }}
+              -join {{ hostvars[groups['consul_master'][0]]['ansible_host'] }}
+              {% for host in groups['consul_slaves'] %}
+              {% if host != inventory_hostname %}
+                {{ hostvars[host]['ansible_host'] }}
+              {% endif %}
+              {% endfor %}
+
+
+
+    - name: Run service registration container for consul (every node)
+      command: >-
+              docker run
+              -d
+              --name registrar
+              -h registrar
+              -v /var/run/docker.sock:/tmp/docker.sock
+              gliderlabs/registrator
+              consul://{{ hostvars[groups['consul_master'][0]]['ansible_host'] }}:8500
+
+
+    - name: Run swarm agent on each node
+      command: >-
+              docker run
+              -d
+              --name sagent
+              -h sagent
+              swarm join
+              --addr={{ ansible_host }}:2375
+              consul://{{ hostvars[groups['consul_master'][0]]['ansible_host'] }}:8500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

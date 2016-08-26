@@ -1,0 +1,16 @@
+[ambari_server]
+c7001.ambari.apache.org ansible_host=192.168.70.101 ansible_user=root ansible_ssh_private_key_file=~/ambari-vagrant/centos7.0/insecure_private_key
+
+
+[consul_master]
+c7003.ambari.apache.org ansible_host=192.168.70.103 ansible_user=root ansible_ssh_private_key_file=~/ambari-vagrant/centos7.0/insecure_private_key
+
+[consul_slaves]
+c7001.ambari.apache.org ansible_host=192.168.70.101 ansible_user=root ansible_ssh_private_key_file=~/ambari-vagrant/centos7.0/insecure_private_key
+c7002.ambari.apache.org ansible_host=192.168.70.102 ansible_user=root ansible_ssh_private_key_file=~/ambari-vagrant/centos7.0/insecure_private_key
+
+[docker]
+c7001.ambari.apache.org ansible_host=192.168.70.101 ansible_user=root ansible_ssh_private_key_file=~/ambari-vagrant/centos7.0/insecure_private_key
+c7002.ambari.apache.org ansible_host=192.168.70.102 ansible_user=root ansible_ssh_private_key_file=~/ambari-vagrant/centos7.0/insecure_private_key
+c7003.ambari.apache.org ansible_host=192.168.70.103 ansible_user=root ansible_ssh_private_key_file=~/ambari-vagrant/centos7.0/insecure_private_key
+
