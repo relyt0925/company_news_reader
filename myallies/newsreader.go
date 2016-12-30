@@ -84,7 +84,7 @@ type NewsItemContent struct {
 
 
 //httpClient used to talk to rest apis
-var httpClient = &http.Client{Timeout:time.Second*10, }
+var httpClient = &http.Client{Timeout:time.Second*2,}
 
 //FetchCompanyNews fetches recent news articles for the company
 //from the proper rest api endpoint. Company should be specified
@@ -110,11 +110,13 @@ func FetchStockQuote(companyName string) ( *StockQuote, error){
 	endpoint := fmt.Sprintf("%s/quote/%s",prefix,companyName)
 	response, err := httpClient.Get(endpoint)
 	if err != nil{
+		fmt.Println(err)
 		return nil, err
 	}
 	newsItems := new(StockQuote)
 	defer response.Body.Close()
 	if err = json.NewDecoder(response.Body).Decode(newsItems); err != nil{
+		fmt.Println(err)
 		return nil, err
 	}
 	return newsItems, nil

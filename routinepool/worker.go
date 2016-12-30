@@ -1,20 +1,20 @@
 package routinepool
 
+import "fmt"
+
 //Worker represents a worker routine that takes jobs
 //from a work queue and processes the job
 type Worker struct {
 	WorkerChan chan Executable
 	WorkQueue chan chan Executable
-	QuitChan chan bool
 }
 
 //NewWorker initalizes a worker and adds a channel
 //to the dispatchers workQueue that
 func NewWorker(workQueue chan chan Executable) *Worker{
 	workerChan := make(chan Executable)
-	quitChan := make(chan bool)
 	worker := Worker{WorkerChan:workerChan,
-	WorkQueue:workQueue,QuitChan:quitChan}
+	WorkQueue:workQueue}
 	return &worker
 }
 
@@ -27,12 +27,15 @@ func(w *Worker) Start(){
 		for{
 			//register with the dispatcher
 			w.WorkQueue <- w.WorkerChan
+
 			//receive a job to run
 			select {
-			case job := <-w.WorkerChan:
+			case job, ok := <-w.WorkerChan:
+				if !ok {
+					fmt.Println("CLOSING")
+					return
+				}
 				job.Run()
-			case <- w.QuitChan:
-				return
 			}
 		}
 	}()

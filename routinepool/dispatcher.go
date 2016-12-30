@@ -11,7 +11,16 @@ func startDispatcher(numWorkers int, workQueue chan Executable){
 	go func(){
 		for{
 			select {
-			case work := <-workQueue:
+			case work, ok := <-workQueue:
+				// Closing the channel kills the dispatcher and cleans up goroutines
+				if !ok{
+					for i:=0 ; i<numWorkers; i++ {
+						w := <- workerPool
+						close(w)
+					}
+					close(workerPool)
+					return
+				}
 				worker := <- workerPool
 				go func() {
 					worker <- work

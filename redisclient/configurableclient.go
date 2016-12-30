@@ -26,11 +26,4 @@ func Hey() {
 	l := client.Get("HEYYYYYY")
 	fmt.Println("SPACE")
 	fmt.Println(l.Result())
-/*
-	clientSing := redis.NewClient(&redis.Options{Addr:viperInstance.GetStringSlice("cluster_nodes")[5],
-	ReadTimeout:time.Millisecond*20, DialTimeout:time.Millisecond*20})
-	fmt.Println(clientSing.Ping())
-	clientSing.ZAdd("HEYYYYYY",redis.Z{Member:"LOL",Score:41242.24})
-	fmt.Println(clientSing.Keys("HEYYYYYY"))
-	*/
 }
