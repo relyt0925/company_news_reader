@@ -22,9 +22,7 @@ func startDispatcher(numWorkers int, workQueue chan Executable){
 					return
 				}
 				worker := <- workerPool
-				go func() {
-					worker <- work
-				}()
+				worker <- work
 			}
 		}
 	}()
