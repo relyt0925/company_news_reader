@@ -17,7 +17,7 @@ func TestStartDispatcher(t *testing.T){
 	testWorkQueueSize := 20
 	testWorkQueue := make(chan Executable,testWorkQueueSize)
 	testNumWorkers := 10
-	var w *Worker
+	var w *worker
 	monkey.PatchInstanceMethod(reflect.TypeOf(w),"Start", mockStart)
 	defer monkey.UnpatchAll()
 	startDispatcher(testNumWorkers,testWorkQueue)
@@ -49,7 +49,7 @@ func (t testDispatcherJob) Run(){
 
 
 //Mocks The start method to also increment closed counter
-func mockStart(w *Worker){
+func mockStart(w *worker){
 	go func(){
 		for{
 			//register with the dispatcher

@@ -5,7 +5,7 @@ import "sync"
 //Submitter provides framework to submit jobs to pool of workers
 //and have workers run jobs then submit the jobs output to be
 //processed by a handler function
-type Submitter struct {
+type submitter struct {
 	workQueue chan<- Executable
 	closed bool
 	closedMutex sync.Mutex
@@ -19,20 +19,20 @@ type Executable interface{
 
 //NewSubmitter creates a New Submitter with the specified work queue size, output queue size, worker pool size,
 // and output handler function
-func NewSubmitter(workQueueSize int, workerPoolSize int) *Submitter{
+func NewSubmitter(workQueueSize int, workerPoolSize int) *submitter{
 	workQueue := make(chan Executable,workQueueSize)
 	startDispatcher(workerPoolSize,workQueue)
-	submitter := Submitter{workQueue:workQueue,closed:false,closedMutex:sync.Mutex{}}
+	submitter := submitter{workQueue:workQueue,closed:false,closedMutex:sync.Mutex{}}
 	return &submitter
 }
 
 //Submit submits the job to the worker pool
-func(s *Submitter) Submit(job Executable){
+func(s *submitter) Submit(job Executable){
 	s.workQueue <- job
 }
 
 //Cleanup shuts down all worker threads after they complete their work
-func(s *Submitter) Cleanup() {
+func(s *submitter) Cleanup() {
 	s.closedMutex.Lock()
 	defer s.closedMutex.Unlock()
 	if !s.closed{

@@ -36,7 +36,7 @@ func TestNewSubmitter(t *testing.T){
 
 func TestSubmitter_Submit(t *testing.T) {
 	testWorkQueue := make(chan Executable, 5)
-	testSubmitter := Submitter{workQueue:testWorkQueue}
+	testSubmitter := submitter{workQueue:testWorkQueue}
 	testJob := testSubmitterJob{i:10}
 	testSubmitter.Submit(testJob)
 	receivedJob := <- testWorkQueue
@@ -48,11 +48,11 @@ func TestSubmitter_Submit(t *testing.T) {
 
 func TestSubmitter_SubmitConcurrent(t *testing.T) {
 	testWorkQueue := make(chan Executable, 5)
-	testSubmitter := Submitter{workQueue:testWorkQueue}
+	testSubmitter := submitter{workQueue:testWorkQueue}
 	testJob := testSubmitterJob{i:10}
 	numJobs := 10
 	for i:= 0; i<numJobs; i++{
-		go func(t *Submitter){
+		go func(t *submitter){
 			t.Submit(testJob)
 		}(&testSubmitter)
 	}
@@ -67,9 +67,9 @@ func TestSubmitter_SubmitConcurrent(t *testing.T) {
 
 func TestSubmitter_Cleanup(t *testing.T) {
 	testWorkQueue := make(chan Executable, 5)
-	testSubmitter := Submitter{workQueue:testWorkQueue}
+	testSubmitter := submitter{workQueue:testWorkQueue}
 	for i:=0; i<2; i++{
-		go func(submitter *Submitter){
+		go func(submitter *submitter){
 			testSubmitter.Cleanup()
 		}(&testSubmitter)
 	}

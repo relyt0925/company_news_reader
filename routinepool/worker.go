@@ -4,16 +4,16 @@ import "fmt"
 
 //Worker represents a worker routine that takes jobs
 //from a work queue and processes the job
-type Worker struct {
+type worker struct {
 	WorkerChan chan Executable
 	WorkQueue chan chan Executable
 }
 
 //NewWorker initalizes a worker and adds a channel
 //to the dispatchers workQueue that
-func NewWorker(workQueue chan chan Executable) *Worker{
+func NewWorker(workQueue chan chan Executable) *worker{
 	workerChan := make(chan Executable)
-	worker := Worker{WorkerChan:workerChan,
+	worker := worker{WorkerChan:workerChan,
 	WorkQueue:workQueue}
 	return &worker
 }
@@ -22,7 +22,7 @@ func NewWorker(workQueue chan chan Executable) *Worker{
 //processes it, then waits for another job to come in.
 //Registers with the work queue by sending its channel
 //into the work queue
-func(w *Worker) Start(){
+func(w *worker) Start(){
 	go func(){
 		for{
 			//register with the dispatcher
