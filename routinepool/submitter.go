@@ -37,6 +37,7 @@ func(s *Submitter) Cleanup() {
 	defer s.closedMutex.Unlock()
 	if !s.closed{
 		close(s.workQueue)
+		s.closed=true
 	}
 }
 
